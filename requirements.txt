@@ -1,11 +1,12 @@
 fastapi
 uvicorn[standard]
-torch
-torchvision
 pillow
 opencv-python
 numpy
 python-multipart
-onnxruntime
 typing-extensions
+torch==2.2.2+cpu
+torchvision==0.17.2+cpu --extra-index-url https://download.pytorch.org/whl/cpu
+onnxruntime==1.17.3
+
 
