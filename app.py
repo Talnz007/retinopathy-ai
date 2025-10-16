@@ -31,7 +31,7 @@ app.add_middleware(
 )
 
 try:
-    app.mount("/static", StaticFiles(directory="static"), name="static")
+    app.mount("/docs", StaticFiles(directory="docs"), name="docs")
 except Exception:
     print("Warning: Static directory not found")
 
