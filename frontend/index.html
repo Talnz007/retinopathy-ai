@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diabetic Retinopathy AI Classifier</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 20px;
+            margin-top: 15px;
+            font-size: 0.9rem;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-online { background: #48bb78; }
+        .status-offline { background: #f56565; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            animation: slideUp 0.6s ease-out;
+        }
+
+        .card h2 {
+            color: #2d3748;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .upload-zone {
+            border: 3px dashed #cbd5e0;
+            border-radius: 16px;
+            padding: 50px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #f7fafc;
+        }
+
+        .upload-zone:hover {
+            border-color: #667eea;
+            background: #edf2f7;
+            transform: translateY(-2px);
+        }
+
+        .upload-zone.dragover {
+            border-color: #667eea;
+            background: #e6fffa;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 3.5rem;
+            color: #a0aec0;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .upload-zone:hover .upload-icon {
+            color: #667eea;
+            transform: scale(1.1);
+        }
+
+        .upload-text {
+            font-size: 1.2rem;
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .upload-subtext {
+            color: #718096;
+            font-size: 0.95rem;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .image-preview {
+            margin-top: 25px;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .preview-img {
+            max-width: 100%;
+            max-height: 350px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+        }
+
+        .loading i {
+            font-size: 3rem;
+            color: #667eea;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .prediction-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .prediction-class {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .confidence {
+            font-size: 1.3rem;
+            opacity: 0.9;
+        }
+
+        .info-card {
+            background: #f7fafc;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+
+        .info-card h4 {
+            color: #2d3748;
+            margin-bottom: 12px;
+            font-size: 1.1rem;
+        }
+
+        .info-card p {
+            color: #4a5568;
+            line-height: 1.6;
+        }
+
+        .recommendations {
+            background: #fff5f5;
+            border-left: 4px solid #f56565;
+        }
+
+        .recommendations ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .recommendations li {
+            padding: 8px 0;
+            padding-left: 24px;
+            position: relative;
+            color: #4a5568;
+        }
+
+        .recommendations li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #f56565;
+            font-weight: bold;
+        }
+
+        .probability-bars {
+            margin-top: 25px;
+        }
+
+        .probability-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 12px;
+            background: white;
+            border-radius: 10px;
+            margin: 10px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+
+        .probability-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+
+        .probability-label {
+            min-width: 120px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .probability-bar {
+            flex: 1;
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .probability-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 6px;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .probability-value {
+            min-width: 60px;
+            text-align: right;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .error-message {
+            background: #fed7d7;
+            color: #c53030;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid #f56565;
+            margin: 20px 0;
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            margin-top: 40px;
+            opacity: 0.85;
+            font-size: 0.9rem;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 968px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            .header h1 {
+                font-size: 1.8rem;
+            }
+        }
+
+        #fileInput {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-eye-dropper"></i> Diabetic Retinopathy AI Classifier</h1>
+            <p>Advanced VGG16 deep learning model for retinal image analysis</p>
+            <div class="status-badge">
+                <div class="status-dot status-offline" id="statusDot"></div>
+                <span id="statusText">Checking API...</span>
+            </div>
+        </div>
+
+        <div class="main-grid">
+            <div class="card">
+                <h2><i class="fas fa-cloud-upload-alt"></i> Upload Image</h2>
+                
+                <div class="upload-zone" id="uploadZone">
+                    <div class="upload-icon">
+                        <i class="fas fa-image"></i>
+                    </div>
+                    <div class="upload-text">Drop retinal image here</div>
+                    <div class="upload-subtext">or click to browse (JPG, PNG)</div>
+                    <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                        <i class="fas fa-folder-open"></i> Choose File
+                    </button>
+                </div>
+
+                <input type="file" id="fileInput" accept="image/*">
+                
+                <div class="image-preview" id="imagePreview" style="display: none;">
+                    <img id="previewImg" class="preview-img" alt="Preview">
+                </div>
+            </div>
+
+            <div class="card">
+                <h2><i class="fas fa-chart-pie"></i> Analysis Results</h2>
+                
+                <div id="resultsContent">
+                    <div class="loading">
+                        <i class="fas fa-info-circle"></i>
+                        <p style="color: #2d3748; font-size: 1.1rem; margin-top: 10px;">
+                            Upload a retinal image to begin AI analysis
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Diabetic Retinopathy Classification System | VGG16 Neural Network</p>
+            <p style="margin-top: 8px; opacity: 0.7;">For research and educational purposes only</p>
+        </div>
+    </div>
+
+    <script>
+        let currentFile = null;
+        let isAnalyzing = false;
+
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('previewImg');
+        const resultsContent = document.getElementById('resultsContent');
+        const statusDot = document.getElementById('statusDot');
+        const statusText = document.getElementById('statusText');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAPIStatus();
+            setupEventListeners();
+        });
+
+        async function checkAPIStatus() {
+            try {
+                const API_BASE = 'http://localhost:8000';
+                const response = await fetch(`${API_BASE}/health`);
+
+                const data = await response.json();
+                
+                if (data.status === 'healthy' && data.model_loaded) {
+                    statusDot.className = 'status-dot status-online';
+                    statusText.textContent = 'Model Ready';
+                } else {
+                    statusDot.className = 'status-dot status-offline';
+                    statusText.textContent = 'Model Loading...';
+                }
+            } catch (error) {
+                statusDot.className = 'status-dot status-offline';
+                statusText.textContent = 'API Offline';
+            }
+        }
+
+        function setupEventListeners() {
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files[0]) handleFile(e.target.files[0]);
+            });
+
+            uploadZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadZone.classList.add('dragover');
+            });
+
+            uploadZone.addEventListener('dragleave', () => {
+                uploadZone.classList.remove('dragover');
+            });
+
+            uploadZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadZone.classList.remove('dragover');
+                if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+            });
+
+            uploadZone.addEventListener('click', () => fileInput.click());
+        }
+
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showError('Please select a valid image file');
+                return;
+            }
+
+            currentFile = file;
+            showImagePreview(file);
+            analyzeImage();
+        }
+
+        function showImagePreview(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImg.src = e.target.result;
+                imagePreview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function analyzeImage() {
+            if (!currentFile || isAnalyzing) return;
+
+            isAnalyzing = true;
+            showLoading();
+
+            try {
+                const formData = new FormData();
+                formData.append('file', currentFile);
+                const API_BASE = 'http://localhost:8000';
+
+                const response = await fetch(`${API_BASE}/predict`, {
+                method: 'POST',
+                body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showResults(result);
+                } else {
+                    showError(result.detail || 'Analysis failed');
+                }
+            } catch (error) {
+                showError('Network error. Please check connection.');
+            } finally {
+                isAnalyzing = false;
+            }
+        }
+
+        function showLoading() {
+            resultsContent.innerHTML = `
+                <div class="loading">
+                    <i class="fas fa-spinner"></i>
+                    <p style="color: #2d3748; font-size: 1.1rem; margin-top: 10px;">
+                        Analyzing retinal image...
+                    </p>
+                    <p style="color: #718096; font-size: 0.9rem; margin-top: 8px;">
+                        Processing with VGG16 neural network
+                    </p>
+                </div>
+            `;
+        }
+
+        function showResults(result) {
+            const severityColors = {
+                0: '#48bb78',
+                1: '#ecc94b',
+                2: '#ed8936',
+                3: '#f56565',
+                4: '#c53030'
+            };
+
+            resultsContent.innerHTML = `
+                <div class="prediction-card">
+                    <div class="prediction-class">
+                        <i class="fas fa-diagnoses"></i> ${result.predicted_class_name}
+                    </div>
+                    <div class="confidence">
+                        Confidence: ${result.confidence}%
+                    </div>
+                </div>
+
+                <div class="info-card">
+                    <h4><i class="fas fa-info-circle"></i> Severity Assessment</h4>
+                    <p>${result.severity_level}</p>
+                </div>
+
+                <div class="info-card recommendations">
+                    <h4><i class="fas fa-notes-medical"></i> Medical Recommendations</h4>
+                    <ul>
+                        ${result.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                    </ul>
+                </div>
+
+                <div class="probability-bars">
+                    <h4 style="color: #2d3748; margin-bottom: 15px;">
+                        <i class="fas fa-chart-bar"></i> Detailed Probability Distribution
+                    </h4>
+                    ${Object.entries(result.all_probabilities)
+                        .sort((a, b) => b[1] - a[1])
+                        .map(([name, prob]) => `
+                            <div class="probability-item">
+                                <span class="probability-label">${name}</span>
+                                <div class="probability-bar">
+                                    <div class="probability-fill" style="width: ${prob}%"></div>
+                                </div>
+                                <span class="probability-value">${prob}%</span>
+                            </div>
+                        `).join('')}
+                </div>
+            `;
+        }
+
+        function showError(message) {
+            resultsContent.innerHTML = `
+                <div class="error-message">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Error:</strong> ${message}
+                </div>
+            `;
+        }
+
+        setInterval(checkAPIStatus, 30000);
+    </script>
+</body>
+</html>
