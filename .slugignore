@@ -1,6 +1,4 @@
 __pycache__/
-*.pt
-*.onnx
 *.mp4
 *.zip
 data/
