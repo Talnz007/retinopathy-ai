@@ -6,3 +6,6 @@ pillow
 opencv-python
 numpy
 python-multipart
+onnxruntime
+typing-extensions
+
