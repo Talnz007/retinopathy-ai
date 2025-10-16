@@ -428,7 +428,7 @@
 
         async function checkAPIStatus() {
             try {
-                const API_BASE = 'http://localhost:8000';
+                const API_BASE = 'https://diabetic-retinopathy-771cb0ba63dc.herokuapp.com';
                 const response = await fetch(`${API_BASE}/health`);
 
                 const data = await response.json();
@@ -498,7 +498,7 @@
             try {
                 const formData = new FormData();
                 formData.append('file', currentFile);
-                const API_BASE = 'http://localhost:8000';
+                const API_BASE = 'https://diabetic-retinopathy-771cb0ba63dc.herokuapp.com';
 
                 const response = await fetch(`${API_BASE}/predict`, {
                 method: 'POST',
