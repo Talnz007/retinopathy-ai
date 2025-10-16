@@ -167,6 +167,11 @@ async def predict_retinopathy(file: UploadFile = File(...)):
         predicted_class = np.argmax(probabilities, axis=1)[0]
         confidence = probabilities[0][predicted_class]
         
+        severity_levels = {
+            0: "Positive diagnosis. Retinal abnormalities consistent with Diabetic Retinopathy were detected.",
+            1: "Negative diagnosis. No clear signs of Diabetic Retinopathy were detected in the analysis."
+        }
+        
         results = {
             "predicted_class": int(predicted_class),
             "predicted_class_name": class_names[predicted_class],
@@ -176,7 +181,8 @@ async def predict_retinopathy(file: UploadFile = File(...)):
                 for i in range(len(class_names))
             },
             "diagnosis": get_diagnosis(predicted_class),
-            "recommendations": get_recommendations(predicted_class)
+            "recommendations": get_recommendations(predicted_class),
+            "severity_level": severity_levels.get(int(predicted_class), "Assessment not available.")
         }
         
         return results
